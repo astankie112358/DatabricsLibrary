@@ -15,5 +15,6 @@ display(tables)
 
 # COMMAND ----------
 
-# MAGIC %skip
-# MAGIC # !!! Before performing any data analysis, make sure to run the pipeline to materialize the sample datasets. The tables referenced in this notebook depend on that step.
+# MAGIC %sh
+# MAGIC git remote add origin https://github.com/astankie112358/DatabricsLibrary.git
+# MAGIC git push -u origin main
