@@ -15,6 +15,21 @@ display(tables)
 
 # COMMAND ----------
 
-# MAGIC %sh
-# MAGIC git remote add origin https://github.com/astankie112358/DatabricsLibrary.git
-# MAGIC git push -u origin main
+table_list=spark.sql(f"SHOW TABLES IN stg").select("tableName")
+for i in table_list.collect():
+    print(i['tableName'])
+    spark.sql(f"DROP TABLE IF EXISTS stg.{i['tableName']}")
+
+# COMMAND ----------
+
+tables_df = spark.sql(f"LIST '/Volumes/workspace/source/lake'")
+tables = [row.name for row in tables_df.collect()]
+display(tables)
+
+# COMMAND ----------
+
+tables_df = dbutils.fs.ls("/Volumes/workspace/source/lake/")
+for i in tables_df:
+    print(i.name)
+    a=spark.read.csv(i.path)
+    display(a)

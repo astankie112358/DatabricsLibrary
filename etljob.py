@@ -15,9 +15,8 @@ def write_table(df, schema, table, mode="overwrite"):
     )
 
 source_schema = "source"
-target_schema = "stg"
-tables_df = spark.sql(f"SHOW TABLES IN {source_schema}")
-tables = [row.tableName for row in tables_df.collect()]
+tables_df = dbutils.fs.ls("/Volumes/workspace/source/lake/")
+tables = [row.name for row in tables_df]
 
 print("Starting ETL pipeline...")
 
@@ -26,10 +25,7 @@ for table in tables:
     
     @dlt.table(name=f"stg_{table}")
     def create_table(table_name=table):
-        df = read_table(source_schema, table_name)
-        print(f"Loaded {source_schema}.{table_name}  (rows: {df.count()})")
-        df = add_loaded_time(df)
-        print(f"Processed {table_name}")
+        df=spark.read.format("csv").option("header", "true").load(f"/Volumes/workspace/source/lake/{table}")
         return df
 
 print("\nETL pipeline completed successfully.")
