@@ -10,7 +10,7 @@ gold_schema = "gold"
 
 #####Load To Bronze#####################
 
-def bronze_table(file_name, table_name):
+def bronze_table_batch(file_name, table_name):
     @dlt.table(name=f"{catalog}.{bronze_schema}.{table_name}")
     def _table():
         return (
@@ -19,16 +19,27 @@ def bronze_table(file_name, table_name):
         )
     return _table
 
-bronze_table("ETLFILMY.csv", "ETLFILMY")
-bronze_table("ETLFIL_KRA.csv", "ETLFIL_KRA")
-bronze_table("ETLFIL_RODZ.csv", "ETLFIL_RODZ")
-bronze_table("ETLKLI.csv", "ETLKLI")
-bronze_table("ETLKRAJE.csv", "ETLKRAJE")
-bronze_table("ETLNOSNIKI.csv", "ETLNOSNIKI")
-bronze_table("ETLREZYSERZY.csv", "ETLREZYSERZY")
-bronze_table("ETLRODZAJE.csv", "ETLRODZAJE")
-bronze_table("ETLWYPO.csv", "ETLWYPO")
-bronze_table("ETLWYPO_NOS.csv", "ETLWYPO_NOS")
+def bronze_table_stream(path, table_name):
+    @dlt.table(name=f"{catalog}.{bronze_schema}.{table_name}")
+    def _table():
+        return (
+            spark.readStream.format("cloudFiles")
+            .option("cloudFiles.format", "csv")
+            .load(path)
+            .withColumn("loaded_time", current_timestamp())
+        )
+
+
+bronze_table_batch("ETLFILMY.csv", "ETLFILMY")
+bronze_table_batch("ETLFIL_KRA.csv", "ETLFIL_KRA")
+bronze_table_batch("ETLFIL_RODZ.csv", "ETLFIL_RODZ")
+bronze_table_batch("ETLKLI.csv", "ETLKLI")
+bronze_table_batch("ETLKRAJE.csv", "ETLKRAJE")
+bronze_table_batch("ETLNOSNIKI.csv", "ETLNOSNIKI")
+bronze_table_batch("ETLREZYSERZY.csv", "ETLREZYSERZY")
+bronze_table_batch("ETLRODZAJE.csv", "ETLRODZAJE")
+bronze_table_stream("/Volumes/workspace/source/lake/", "ETLWYPO")
+bronze_table_batch("ETLWYPO_NOS.csv", "ETLWYPO_NOS")
 
 #####Load To Silver#####################
 
@@ -37,21 +48,4 @@ def silver_ETLFILMY():
     df = dlt.read(f"{catalog}.{bronze_schema}.ETLFILMY")
     df = add_loaded_time(df)
     return df
-
-# tables = [row.name for row in tables_df]
-# for table in tables:
-#     csv_name=table
-#     table_name=table.replace(".csv","")
-#     @dlt.create_table(name=f"{catalog}.{bronze_schema}.{table_name}")
-#     def create_table(table_name=table):
-#         df=spark.read.format("csv").option("header", "true").load(f"/Volumes/workspace/source/lake/{csv_name}")
-#         return df
-
-# for table in tables:
-#     table.replace(".csv","")
-#     table=table.replace(".csv","")  
-#     @dlt.create_table(name=f"{catalog}.{silver_schema}.{table}")
-#     def create_table(table_name=table):
-#         df=spark.sql(f"SELECT * FROM {bronze_schema}.b_{table}")
-#         return df
 
