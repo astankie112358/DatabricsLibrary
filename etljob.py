@@ -66,6 +66,19 @@ silver_table("ETLRODZAJE")
 silver_table("ETLWYPO")
 silver_table("ETLWYPO_NOS")
 
-        
+def gold_table(table_name):
+    new_name = "f_orders"
+    @dlt.table(name=f"{catalog}.{gold_schema}.{new_name}")
+    def _table():
+        df = dlt.read(f"{catalog}.{silver_schema}.{table_name}")
+        df2 = dlt.read(f"{catalog}.{silver_schema}.rental_items")
+        df = df.join(
+            df2,
+            df2.rental_id == df.rental_id
+        )
+        df = df.drop(df2.rental_id, df2.loaded_time)
+        return df
+    
+gold_table("rentals")
         
 
