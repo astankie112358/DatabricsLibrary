@@ -1,7 +1,8 @@
 from pyspark.sql.functions import current_timestamp
 from src.transformations.add_loaded_time import add_loaded_time
-from src.transformations.rename_columns import rename_columns, column_rename_map
+from src.transformations.rename_columns import rename_columns
 from src.transformations.rename_tables import get_new_table_name
+from src.transformations.create_joins import return_joins_for_table
 import dlt
 
 catalog="workspace"
@@ -27,6 +28,7 @@ def bronze_table_stream(path, table_name):
         return (
             spark.readStream.format("cloudFiles")
             .option("cloudFiles.format", "csv")
+            .option("cloudFiles.partitionColumns", "") 
             .load(path)
             .withColumn("loaded_time", current_timestamp())
         )
@@ -50,7 +52,7 @@ def silver_table(table_name):
     def _table():
         df = dlt.read(f"{catalog}.{bronze_schema}.{table_name}")
         df = add_loaded_time(df)
-        df = rename_columns(df, column_rename_map[f"{table_name}"])
+        df = rename_columns(df, table_name)
         return df
     
 silver_table("ETLFILMY")
@@ -63,4 +65,7 @@ silver_table("ETLREZYSERZY")
 silver_table("ETLRODZAJE")
 silver_table("ETLWYPO")
 silver_table("ETLWYPO_NOS")
+
+        
+        
 

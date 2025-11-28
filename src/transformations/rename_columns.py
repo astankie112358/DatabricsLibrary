@@ -58,7 +58,8 @@ column_rename_map = {
     }
 }
 
-def rename_columns(df, mapping):
+def rename_columns(df, table_name):
+    mapping=column_rename_map[f"{table_name}"]
     for old_col, new_col in mapping.items():
         df = df.withColumnRenamed(old_col, new_col)
     return df

@@ -51,3 +51,13 @@ def rename_columns(df, mapping):
 df = spark.read.table("workspace.bronze.etlfilmy")
 df = rename_columns(df, column_rename_map["ETLFILMY"])
 display(df)
+
+# COMMAND ----------
+
+from src.transformations.create_joins import return_joins_for_table
+
+join_cfg=return_joins_for_table("Rentals")
+if join_cfg and len(join_cfg)>0:
+    for join in join_cfg:
+        display(join['other_table'])
+        #right_df = spark.read(f"workspace.silver".{join['other_table']}")
