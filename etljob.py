@@ -46,39 +46,39 @@ bronze_table_batch("ETLWYPO_NOS.csv", "ETLWYPO_NOS")
 
 #####Load To Silver#####################
 
-def silver_table(table_name):
+def silver_table_stream(table_name):
     new_name = get_new_table_name(table_name)
     @dlt.table(name=f"{catalog}.{silver_schema}.{new_name}")
     def _table():
-        df = dlt.read(f"{catalog}.{bronze_schema}.{table_name}")
+        df = spark.readStream.table(f"{catalog}.{bronze_schema}.{table_name}")
         df = add_loaded_time(df)
         df = rename_columns(df, table_name)
         return df
-    
-silver_table("ETLFILMY")
-silver_table("ETLFIL_KRA")
-silver_table("ETLFIL_RODZ")
-silver_table("ETLKLI")
-silver_table("ETLKRAJE")
-silver_table("ETLNOSNIKI")
-silver_table("ETLREZYSERZY")
-silver_table("ETLRODZAJE")
-silver_table("ETLWYPO")
-silver_table("ETLWYPO_NOS")
 
-def gold_table(table_name):
+silver_table_stream("ETLFILMY")
+silver_table_stream("ETLFIL_KRA")
+silver_table_stream("ETLFIL_RODZ")
+silver_table_stream("ETLKLI")
+silver_table_stream("ETLKRAJE")
+silver_table_stream("ETLNOSNIKI")
+silver_table_stream("ETLREZYSERZY")
+silver_table_stream("ETLRODZAJE")
+silver_table_stream("ETLWYPO")
+silver_table_stream("ETLWYPO_NOS")
+
+def gold_table_stream(table_name):
     new_name = "f_orders"
     @dlt.table(name=f"{catalog}.{gold_schema}.{new_name}")
     def _table():
-        df = dlt.read(f"{catalog}.{silver_schema}.{table_name}")
-        df2 = dlt.read(f"{catalog}.{silver_schema}.rental_items")
+        df = spark.readStream.table(f"{catalog}.{silver_schema}.{table_name}")
+        df2 = spark.readStream.table(f"{catalog}.{silver_schema}.rental_items")
         df = df.join(
             df2,
             df2.rental_id == df.rental_id
         )
         df = df.drop(df2.rental_id, df2.loaded_time)
         return df
-    
-gold_table("rentals")
+
+gold_table_stream("rentals")
         
 
