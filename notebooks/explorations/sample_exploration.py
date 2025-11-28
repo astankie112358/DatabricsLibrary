@@ -38,3 +38,16 @@ display(
     df,
     checkpointLocation="/Volumes/workspace/source/lake/_checkpoints/etlfilmy"
 )
+
+# COMMAND ----------
+
+from src.transformations.rename_columns import column_rename_map
+
+def rename_columns(df, mapping):
+    for old_col, new_col in mapping.items():
+        df = df.withColumnRenamed(old_col, new_col)
+    return df
+
+df = spark.read.table("workspace.bronze.etlfilmy")
+df = rename_columns(df, column_rename_map["ETLFILMY"])
+display(df)
