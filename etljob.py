@@ -1,4 +1,3 @@
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import current_timestamp
 from src.transformations.add_loaded_time import add_loaded_time
 import dlt
@@ -8,16 +7,31 @@ source_schema = "source"
 bronze_schema = "bronze"
 silver_schema = "silver"
 gold_schema = "gold"
-tables_df = dbutils.fs.ls("/Volumes/workspace/source/lake/")
 
-@dlt.table(
-    name=f"{catalog}.{bronze_schema}.ETLFILMY",
-)
-def bronze_ETLFILMY():
-    df = spark.read.format("csv").option("header", "true").load(
-        f"/Volumes/workspace/source/lake/ETLFILMY.csv"
-    )
-    return df
+#####Load To Bronze#####################
+
+def bronze_table(file_name, table_name):
+    @dlt.table(name=f"{catalog}.{bronze_schema}.{table_name}")
+    def _table():
+        return (
+            spark.read.csv(f"/Volumes/{catalog}/{source_schema}/lake/{file_name}")
+            .withColumn("loaded_time", current_timestamp())
+        )
+    return _table
+
+bronze_table("ETLFILMY.csv", "ETLFILMY")
+bronze_table("ETLFIL_KRA.csv", "ETLFIL_KRA")
+bronze_table("ETLFIL_RODZ.csv", "ETLFIL_RODZ")
+bronze_table("ETLKLI.csv", "ETLKLI")
+bronze_table("ETLKRAJE.csv", "ETLKRAJE")
+bronze_table("ETLNOSNIKI.csv", "ETLNOSNIKI")
+bronze_table("ETLREZYSERZY.csv", "ETLREZYSERZY")
+bronze_table("ETLRODZAJE.csv", "ETLRODZAJE")
+bronze_table("ETLWYPO.csv", "ETLWYPO")
+bronze_table("ETLWYPO_NOS.csv", "ETLWYPO_NOS")
+
+#####Load To Silver#####################
+
 @dlt.table(name=f"{catalog}.{silver_schema}.ETLFILMY")
 def silver_ETLFILMY():
     df = dlt.read(f"{catalog}.{bronze_schema}.ETLFILMY")
