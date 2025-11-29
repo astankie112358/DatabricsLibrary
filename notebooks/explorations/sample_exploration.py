@@ -67,18 +67,26 @@ if join_cfg and len(join_cfg)>0:
 from src.transformations.create_joins import join_config
 
 def check_if_tables_join(table1, table2):
-    for join in join_config[table1]['joins']:
-        if join['other_table']==table2:
-            return True
-    return False 
+    return table2 in join_config[table1].keys()
 
-def find_join_map(table_name, joins):
-    left_to_join=joins
+def prefix_columns(df, prefix, skip_cols=None):
+    if skip_cols is None:
+        skip_cols = []
+    for col in df.columns:
+        if col not in skip_cols:
+            df = df.withColumnRenamed(col, prefix + col)
+    return df
+
+
+def find_join_map(table_name, joins, prefix, skip_cols=None):
+    target_df = spark.read.table(f"workspace.silver.{table_name}")
+    left_to_join = joins.copy()
     matched = []
-    for other_table in left_to_join:
+    for other_table in joins:
         if check_if_tables_join(table_name, other_table):
             matched.append(other_table)
             left_to_join.remove(other_table)
+            operation_made = True
     while len(left_to_join)>0:
         operation_made=False
         for other_table in left_to_join:
@@ -88,6 +96,7 @@ def find_join_map(table_name, joins):
                     left_to_join.remove(other_table)
                     operation_made=True
         if not operation_made:
-            return matched
+            return 'A'
     return matched
-display(find_join_map('Rental_Items', ['Rentals', 'Movies','Copies']))
+
+display(find_join_map('Rental_Items', ['Rentals', 'Copies'], 'AAA'))
