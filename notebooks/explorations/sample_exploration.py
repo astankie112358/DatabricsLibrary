@@ -61,3 +61,33 @@ if join_cfg and len(join_cfg)>0:
     for join in join_cfg:
         display(join['other_table'])
         #right_df = spark.read(f"workspace.silver".{join['other_table']}")
+
+# COMMAND ----------
+
+from src.transformations.create_joins import join_config
+
+def check_if_tables_join(table1, table2):
+    for join in join_config[table1]['joins']:
+        if join['other_table']==table2:
+            return True
+    return False 
+
+def find_join_map(table_name, joins):
+    left_to_join=joins
+    matched = []
+    for other_table in left_to_join:
+        if check_if_tables_join(table_name, other_table):
+            matched.append(other_table)
+            left_to_join.remove(other_table)
+    while len(left_to_join)>0:
+        operation_made=False
+        for other_table in left_to_join:
+            for matched_table in matched:
+                if check_if_tables_join(other_table, matched_table):
+                    matched.append(other_table)
+                    left_to_join.remove(other_table)
+                    operation_made=True
+        if not operation_made:
+            return matched
+    return matched
+display(find_join_map('Rental_Items', ['Rentals', 'Movies','Copies']))

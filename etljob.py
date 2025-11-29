@@ -66,7 +66,7 @@ silver_table_stream("ETLRODZAJE")
 silver_table_stream("ETLWYPO")
 silver_table_stream("ETLWYPO_NOS")
 
-def gold_table_stream(table_name):
+def gold_fact_table(table_name):
     new_name = "f_orders"
     @dlt.table(name=f"{catalog}.{gold_schema}.{new_name}")
     def _table():
@@ -78,7 +78,19 @@ def gold_table_stream(table_name):
         )
         df = df.drop(df2.rental_id, df2.loaded_time)
         return df
+def gold_dim_table(table_name):
+    new_name = "d_movies"
+    @dlt.table(name=f"{catalog}.{gold_schema}.{new_name}")
+    def _table():
+        df = spark.readStream.table(f"{catalog}.{silver_schema}.{table_name}")
+        df2 = spark.readStream.table(f"{catalog}.{silver_schema}.movie_genre")
+        df3 = spark.readStream.table(f"{catalog}.{silver_schema}.movie_country")
+        df4 = spark.readStream.table(f"{catalog}.{silver_schema}.genres")
+        df5 =
+        df = df.join(
+            df2
+        return df
 
-gold_table_stream("rentals")
+gold_fact_table("rentals")
         
 
