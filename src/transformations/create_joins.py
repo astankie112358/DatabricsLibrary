@@ -60,32 +60,39 @@ def prefix_columns(df, prefix, skip_cols=None):
             df = df.withColumnRenamed(col, prefix + col)
     return df
 
-def joined_tables(source_name, target_name, df1, df2, prefix):
+def joined_tables(source_name, target_name, df1, df2, prefix, old_prefix=None):
     join_key = join_config[source_name][target_name]['on']
     df2 = prefix_columns(df2, prefix, skip_cols=[join_key])
-    return df1.join(df2, join_config[source_name][target_name]['on'], join_config[source_name][target_name]['how'])
+    on1=join_config[source_name][target_name]['on']
+    how=join_config[source_name][target_name]['how']
+    on2=on1
+    if old_prefix is not None:
+        on2=old_prefix+on1
+    return df1.join(df2, df1[on2]==df2[on1], how)
 
-def find_join_map(table_name, joins, prefix, skip_cols=None):
+def find_join_map(table_name, joins, skip_cols=None):
     target_df = spark.read.table(f"workspace.silver.{table_name}")
     left_to_join = joins.copy()
-    matched = []
+    matched = {}
     for other_table in joins:
         if check_if_tables_join(table_name, other_table):
-            matched.append(other_table)
+            prefix=f"{other_table[:3]}_"
+            matched.update({other_table:prefix})
             left_to_join.remove(other_table)
             other_df = spark.read.table(f"workspace.silver.{other_table}")
             target_df=joined_tables(table_name, other_table, target_df, other_df, prefix)
     while len(left_to_join)>0:
         operation_made=False
         for other_table in left_to_join:
-            for matched_table in matched:
+            for matched_table in list(matched.keys()):
                 if check_if_tables_join(other_table, matched_table):
-                    matched.append(other_table)
+                    prefix=f"{other_table[:3]}_"
+                    matched.update({other_table:f"{matched[matched_table]}_{prefix}"})
                     left_to_join.remove(other_table)
                     operation_made=True
-                    target_df=joined_tables(table_name, other_table, target_df, other_df, prefix)
+                    target_df=joined_tables(matched_table, other_table, target_df, other_df, f"{other_table[:3]}_",matched[matched_table])
         if not operation_made:
             return None
     return target_df
 
-display(find_join_map('Rental_Items', ['Rentals', 'Copies'], 'AAA'))
+display(find_join_map('Rental_Items', ['Rentals', 'Copies','Movies']))
