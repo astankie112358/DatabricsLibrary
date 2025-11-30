@@ -72,7 +72,7 @@ def joined_tables(source_name, target_name, df1, df2, old_prefix=None, prefix=No
 def aggregate_tables(df, matched, main_table):
     main_cols = [col for col in df.columns if not any(col.startswith(prefix + "_") for prefix in matched.values())]
     added_cols = [col for col in df.columns if any(col.startswith(prefix + "_") for prefix in matched.values())]
-    return df.groupBy(main_cols).agg(*[F.collect_list(col).cast("string").alias(col) for col in added_cols])
+    return df.groupBy(main_cols).agg(*[F.collect_set(col).cast("string").alias(col) for col in added_cols])
 
 def remove_columns(df, columns, matched):
     cols_to_remove = set()
@@ -115,13 +115,3 @@ def find_join_map(df, table_name, joins, drop_columns=None):
     if drop_columns:
         target_df = remove_columns(target_df, drop_columns, matched)
     return target_df
-
-# catalog="workspace"
-# silver_schema="silver"
-# table_name="movies"
-# join_tables=["directors", "movie_country", "movie_genre","genres","countries"]
-# drop_columns=["movie_id", "director_id"]
-
-# df = spark.read.table(f"{catalog}.{silver_schema}.{table_name}")
-# df=find_join_map(df,table_name, join_tables, drop_columns)
-# display(df)
