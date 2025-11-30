@@ -52,23 +52,22 @@ join_config = {
 def check_if_tables_join(table1, table2):
     return table2 in join_config[table1].keys()
 
-def prefix_columns(df, prefix, skip_cols=None):
-    if skip_cols is None:
-        skip_cols = []
+def prefix_columns(df, prefix):
     for col in df.columns:
-        if col not in skip_cols:
-            df = df.withColumnRenamed(col, prefix + col)
+        df = df.withColumnRenamed(col, prefix + col)
     return df
 
-def joined_tables(source_name, target_name, df1, df2, prefix, old_prefix=None):
+def joined_tables(source_name, target_name, df1, df2, old_prefix=None, prefix=None):
     join_key = join_config[source_name][target_name]['on']
-    df2 = prefix_columns(df2, prefix, skip_cols=[join_key])
-    on1=join_config[source_name][target_name]['on']
+    df2 = prefix_columns(df2, prefix)
+    left_key  = (old_prefix + join_key) if old_prefix else join_key
+    right_key = prefix + join_key
     how=join_config[source_name][target_name]['how']
-    on2=on1
-    if old_prefix is not None:
-        on2=old_prefix+on1
-    return df1.join(df2, df1[on2]==df2[on1], how)
+    return df1.join(
+        df2,
+        df1[left_key] == df2[right_key],
+        how
+    )
 
 def find_join_map(table_name, joins, skip_cols=None):
     target_df = spark.read.table(f"workspace.silver.{table_name}")
@@ -76,23 +75,23 @@ def find_join_map(table_name, joins, skip_cols=None):
     matched = {}
     for other_table in joins:
         if check_if_tables_join(table_name, other_table):
-            prefix=f"{other_table[:3]}_"
+            prefix=other_table
             matched.update({other_table:prefix})
             left_to_join.remove(other_table)
-            other_df = spark.read.table(f"workspace.silver.{other_table}")
-            target_df=joined_tables(table_name, other_table, target_df, other_df, prefix)
+            other_df = spark.read.table(f"workspace.silver.{other_table}")    
+            target_df=joined_tables(table_name, other_table, target_df, other_df, prefix=prefix)
     while len(left_to_join)>0:
         operation_made=False
         for other_table in left_to_join:
             for matched_table in list(matched.keys()):
                 if check_if_tables_join(other_table, matched_table):
-                    prefix=f"{other_table[:3]}_"
-                    matched.update({other_table:f"{matched[matched_table]}_{prefix}"})
+                    other_df = spark.read.table(f"workspace.silver.{other_table}")
+                    prefix=matched[matched_table]
+                    other_prefix=f"{other_table}_"
+                    matched.update({other_table:other_prefix})
                     left_to_join.remove(other_table)
                     operation_made=True
-                    target_df=joined_tables(matched_table, other_table, target_df, other_df, f"{other_table[:3]}_",matched[matched_table])
+                    target_df=joined_tables(matched_table, other_table, target_df, other_df, prefix=other_prefix, old_prefix=prefix)
         if not operation_made:
             return None
     return target_df
-
-display(find_join_map('Rental_Items', ['Rentals', 'Copies','Movies']))
