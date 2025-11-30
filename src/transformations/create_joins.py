@@ -1,4 +1,5 @@
 import src.errors.custom_errors as e
+from pyspark.sql import functions as F
 
 join_config = {
     "Movies": {
@@ -54,20 +55,21 @@ def check_if_tables_join(table1, table2):
     return table2 in join_config[table1].keys()
 
 def prefix_columns(df, prefix):
-    return df.select([df[col].alias(prefix + col) for col in df.columns])
+    return df.select([df[col].alias(prefix +'_'+ col) for col in df.columns])
 
 def joined_tables(source_name, target_name, df1, df2, old_prefix=None, prefix=None):
     join_key = join_config[source_name][target_name]['on']
     df2 = prefix_columns(df2, prefix)
-    left_key  = (old_prefix + join_key) if old_prefix else join_key
-    right_key = prefix + join_key
+    left_key  = (old_prefix +'_'+ join_key) if old_prefix else join_key
+    right_key = prefix +'_'+ join_key
     how=join_config[source_name][target_name]['how']
-    return df1.join(
-        df2,
-        df1[left_key] == df2[right_key],
-        how
-    )
-
+    agg_exprs = [F.collect_set(col).alias(col) for col in df2.columns if col != right_key]
+    df2_agg = df2.groupBy(right_key).agg(*agg_exprs)
+    cols_to_convert = [col for col in df2_agg.columns if col != right_key]
+    for col_name in cols_to_convert:
+        df2_agg = df2_agg.withColumn(col_name, F.concat_ws(", ", F.col(col_name)))
+    return df1.join(df2_agg, df1[left_key] == df2_agg[right_key], how)
+    
 def find_join_map(table_name, joins):
     tables_to_read = [table_name] + joins
     dfs = {
@@ -100,4 +102,4 @@ def find_join_map(table_name, joins):
             raise e.CantMapSelectedTables(left_to_join)
     return target_df
 
-display(find_join_map("Directors", ["Movie_Genre","Movie_Country"]))
+display(find_join_map("Movies", ["Movie_Genre","Genres"]))
