@@ -3,6 +3,7 @@ from src.transformations.add_loaded_time import add_loaded_time
 from src.transformations.rename_columns import rename_columns
 from src.transformations.rename_tables import get_new_table_name
 from src.transformations.create_joins import find_join_map
+from src.transformations.data_fix import replace_polish_characters
 import dlt
 
 catalog="workspace"
@@ -52,6 +53,7 @@ def silver_table_stream(table_name):
     def _table():
         df = spark.read.table(f"{catalog}.{bronze_schema}.{table_name}")
         df = add_loaded_time(df)
+        df = replace_polish_characters(df)
         df = rename_columns(df, table_name)
         return df
 
