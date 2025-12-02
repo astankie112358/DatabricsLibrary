@@ -18,7 +18,7 @@ def bronze_table_batch(file_name, table_name):
     @dlt.table(name=f"{catalog}.{bronze_schema}.{table_name}")
     def _table():
         return (
-            spark.read.csv(f"/Volumes/{catalog}/{source_schema}/lake/{file_name}",header=True)
+            spark.read.csv(f"/Volumes/{catalog}/{source_schema}/lake/{file_name}",header=True, encoding="windows-1250")
             .withColumn("loaded_time", current_timestamp())
         )
     return _table

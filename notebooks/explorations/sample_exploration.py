@@ -100,3 +100,8 @@ def find_join_map(table_name, joins, prefix, skip_cols=None):
     return matched
 
 display(find_join_map('Rental_Items', ['Rentals', 'Copies'], 'AAA'))
+
+# COMMAND ----------
+
+a=spark.read.csv(f"/Volumes/Workspace/Source/lake/ETLFILMY.csv", header=True, encoding="windows-1250")
+display(a)
