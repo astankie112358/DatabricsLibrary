@@ -68,6 +68,8 @@ silver_table_stream("ETLRODZAJE")
 silver_table_stream("ETLWYPO")
 silver_table_stream("ETLWYPO_NOS")
 
+#####Load To Gold#####################
+
 def gold_table(table_name, new_table_name, join_tables=None, drop_columns=None):
     @dlt.table(name=f"{catalog}.{gold_schema}.{new_table_name}")
     def _table():
@@ -77,13 +79,23 @@ def gold_table(table_name, new_table_name, join_tables=None, drop_columns=None):
             joins.update({table_name: spark.read.table(f"{catalog}.{silver_schema}.{table_name}") for table_name in join_tables})
             df_main=find_join_map(df_main, table_name, joins, drop_columns=None)
         return df_main
-        
+
+#Configure the denormalization
+
 table_name="copies"
 join_tables=["directors", "movie_country", "movie_genre","genres","countries","movies"]
-drop_columns=["movie_id", "director_id"]     
+drop_columns=["director_id","country_id","genre_id"]     
 
 gold_table(table_name, "d_movies", join_tables, drop_columns)
-gold_table("clients", "d_customers")
-gold_table("rental_items", "f_orders",["rentals"])
+
+table_name="clients"
+join_tables=None
+drop_columns=None   
+gold_table(table_name, "d_customers", join_tables, drop_columns)
+
+table_name="rental_items"
+join_tables=["rentals"]
+drop_columns=None
+gold_table(table_name, "f_orders", join_tables, drop_columns)
 
 
