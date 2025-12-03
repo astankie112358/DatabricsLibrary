@@ -73,7 +73,11 @@ silver_table_stream("ETLWYPO_NOS")
 def gold_table(table_name, new_table_name, join_tables=None, drop_columns=None):
     @dlt.table(name=f"{catalog}.{gold_schema}.{new_table_name}")
     def _table():
-        df_main = spark.read.table(f"{catalog}.{silver_schema}.{table_name}")
+        df_main = (
+            spark.readStream
+            .option("skipChangeCommits", "true")
+            .table(f"{catalog}.{silver_schema}.{table_name}")
+        )
         joins={}
         if join_tables is not None:
             joins.update({table_name: spark.read.table(f"{catalog}.{silver_schema}.{table_name}") for table_name in join_tables})

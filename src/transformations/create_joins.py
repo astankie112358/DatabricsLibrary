@@ -72,7 +72,12 @@ def joined_tables(source_name, target_name, df1, df2, old_prefix=None, prefix=No
 def aggregate_tables(df, matched, main_table):
     main_cols = [col for col in df.columns if not any(col.startswith(prefix + "_") for prefix in matched.values())]
     added_cols = [col for col in df.columns if any(col.startswith(prefix + "_") for prefix in matched.values())]
-    return df.groupBy(main_cols).agg(*[F.collect_set(col).cast("string").alias(col) for col in added_cols])
+    return df.groupBy(main_cols).agg(*[F.regexp_replace(
+                F.collect_set(col).cast("string"),
+                r"[\[\]]", ""
+            ).alias(col)
+            for col in added_cols
+        ])
 
 def remove_columns(df, columns, matched):
     cols_to_remove = set()
@@ -90,6 +95,7 @@ def find_join_map(df, table_name, joins, drop_columns=None):
     target_df = df
     left_to_join = list(joins.keys())
     matched = {}
+    df = df.toDF(*[f"{table_name}_{col}" for col in df.columns])
     for other_table in left_to_join[:]:
         if check_if_tables_join(table_name, other_table):
             prefix = other_table

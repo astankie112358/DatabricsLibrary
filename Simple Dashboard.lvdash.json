@@ -1,0 +1,230 @@
+{
+  "datasets": [
+    {
+      "name": "2f9819d3",
+      "displayName": "f_orders",
+      "queryLines": [
+        ""
+      ]
+    },
+    {
+      "name": "6a85ad2f",
+      "displayName": "d_movies",
+      "queryLines": [
+        "SELECT * FROM workspace.gold.d_movies"
+      ]
+    },
+    {
+      "name": "1326904a",
+      "displayName": "d_customers",
+      "queryLines": [
+        "SELECT * FROM workspace.gold.f_orders ord\r\n",
+        "INNER Join workspace.gold.d_movies mov on ord.carrier_id = mov.carrier_id\r\n",
+        "INNER Join workspace.gold.d_customers cus on ord.rentals_client_id=cus.client_id "
+      ]
+    },
+    {
+      "name": "1147f69b",
+      "displayName": "Merged Star Schema",
+      "queryLines": [
+        "SELECT * FROM workspace.gold.f_orders as ord\r\n",
+        "INNER JOIN workspace.gold.d_customers as cus on ord.rentals_client_id = cus.client_id\r\n",
+        "INNER JOIN workspace.gold.d_movies as mov on ord.carrier_id=mov.carrier_id"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "f46bf730",
+      "displayName": "Basic info",
+      "layout": [
+        {
+          "widget": {
+            "name": "e6995e11",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1147f69b",
+                  "fields": [
+                    {
+                      "name": "movies_title",
+                      "expression": "`movies_title`"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "movies_title",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "annotations": [
+                {
+                  "type": "horizontal-line",
+                  "encodings": {
+                    "y": {
+                      "dataValue": "4",
+                      "dataType": "INTEGER"
+                    }
+                  }
+                }
+              ],
+              "frame": {
+                "showTitle": true,
+                "title": "Most Popular Movies"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "6640194b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1147f69b",
+                  "fields": [
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(*)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Sum of Rentals"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "6ef376be",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1147f69b",
+                  "fields": [
+                    {
+                      "name": "rentals_rental_date",
+                      "expression": "`rentals_rental_date`"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "rentals_rental_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 9,
+            "width": 3,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "59bdf213",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "88c85b46",
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {},
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
