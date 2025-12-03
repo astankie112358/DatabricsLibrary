@@ -1,0 +1,106 @@
+{
+  "datasets": [
+    {
+      "name": "2f9819d3",
+      "displayName": "f_orders",
+      "queryLines": [
+        "SELECT * FROM workspace.gold.f_orders"
+      ]
+    },
+    {
+      "name": "6a85ad2f",
+      "displayName": "d_movies",
+      "queryLines": [
+        "SELECT * FROM workspace.gold.d_movies"
+      ]
+    },
+    {
+      "name": "1326904a",
+      "displayName": "d_customers",
+      "queryLines": [
+        "SELECT * FROM workspace.gold.f_orders ord\r\n",
+        "INNER Join workspace.gold.d_movies mov on ord.carrier_id = mov.carrier_id\r\n",
+        "INNER Join workspace.gold.d_customers cus on ord.rentals_client_id=cus.client_id "
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "f46bf730",
+      "displayName": "Untitled page",
+      "layout": [
+        {
+          "widget": {
+            "name": "e6995e11",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2f9819d3",
+                  "fields": [
+                    {
+                      "name": "movies_title",
+                      "expression": "`movies_title`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "movies_title",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 10
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "59bdf213",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "88c85b46",
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {},
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
